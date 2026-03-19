@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bihar Sin - AI Student Portal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/generative-ai": "https://esm.run/@google/generative-ai",
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"
+        }
+      }
+    </script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Poppins', 'sans-serif'],
+                        hand: ['Kalam', 'cursive'] 
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#FDFBF7', navy: '#0F172A', primary: '#1E293B',
+                            accent: '#0EA5E9', surface: '#FFFFFF',
+                            ink: '#0000e6' // Real Pen Blue
+                        }
+                    },
+                    borderRadius: { 'xl': '1rem', '2xl': '1.5rem', '3xl': '2rem' },
+                    boxShadow: { 'soft': '0 4px 20px -2px rgba(15, 23, 42, 0.05)', 'card': '0 10px 40px -10px rgba(0, 0, 0, 0.05)' },
+                    animation: {
+                        'spin-slow': 'spin 20s linear infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        html { scroll-behavior: smooth; }
+        body { -webkit-tap-highlight-color: transparent; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; opacity: 0; transform: translateY(15px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        
+        /* Markdown Styles */
+        .prose h3 { font-size: 1.1rem; font-weight: 700; color: #0F172A; margin-top: 1.2rem; margin-bottom: 0.5rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 4px; }
+        .prose p { font-size: 0.9rem; color: #334155; margin-bottom: 0.8rem; line-height: 1.6; }
+        .prose ul { list-style-type: disc; padding-left: 1.2rem; margin-bottom: 1rem; }
+        .prose li { font-size: 0.9rem; color: #334155; margin-bottom: 0.3rem; }
+        .prose strong { color: #0EA5E9; font-weight: 600; }
+
+
+        /* Modern Ad Banner Style */
+        .ad-banner-container {
+            background: white;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 15px -3px rgba(0, 0, 0, 0.05);
+            aspect-ratio: 16 / 9;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-brand-bg text-brand-primary font-sans antialiased min-h-screen flex flex-col relative">
+
+    <div id="chakra-bg" class="fixed -top-16 -right-16 z-0 pointer-events-none opacity-10">
+        <img src="https://i.ibb.co/NdNntcXc/ashok-chakra-e1426766122112.png" 
+             alt="Ashoka Chakra" 
+             class="w-64 h-64 animate-spin-slow object-contain">
+     </div>
+
+    <main class="flex-grow w-full max-w-md mx-auto flex flex-col justify-center relative z-10 px-6 pt-10 pb-10">
+
+        <section id="hero-section" class="text-center flex flex-col items-center justify-center min-h-[70vh] fade-in-up">
+            <div class="relative w-400 h-400 mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 bg-brand-accent/10 blur-3xl rounded-full"></div>
+                <img src="https://i.ibb.co/60QQkL3R/Pngtree-saraswati-devi-black-and-white-14518487.png" 
+                     alt="Bihar Sin Logo" 
+                     class="relative w-full h-300px object-contain drop-shadow-xl animate-float">
+            </div>
+
+           <h1 class="text-2xl font-bold text-brand-navy tracking-tight mb-2">
+             <p>।।ॐ सरस्वती नमः।।</p>
+                Welcome to <span class="text-brand-accent">AMRIT.ONE</span>
+            </h1>
+            <p class="text-sm text-slate-400 mb-10 max-w-[490px] mx-auto leading-relaxed">
+                Bihar student information website. Special for BSEB students.
+            </p>
+            
+            <button onclick="openInputModal()" class="group relative inline-flex items-center justify-center px-8 py-3.5 text-base font-semibold text-white transition-all duration-200 bg-brand-navy font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-navy active:scale-95 shadow-lg hover:shadow-xl hover:bg-slate-800">
+                Get Started
+                <i data-lucide="arrow-right" class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform"></i>
+            </button>
+        </section>
+
+        <section id="results-section" class="mt-4 px-2 hidden pb-20">
+            <div class="flex items-center justify-between mb-6 px-2 fade-in-up">
+                <button onclick="resetToHome()" class="flex items-center gap-2 text-slate-500 hover:text-brand-navy transition-colors">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                    <span class="text-sm font-semibold">Home</span>
+                </button>
+                <button onclick="openInputModal()" class="text-xs text-brand-accent font-medium bg-brand-accent/10 px-3 py-1.5 rounded-full hover:bg-brand-accent/20 transition-colors">
+                    Edit Details
+                </button>
+            </div>
+
+            <div id="dynamic-ad-container" class="hidden w-full mb-6 relative fade-in-up">
+                <div class="ad-banner-container">
+                    <div id="ad-loader" class="absolute inset-0 flex items-center justify-center text-slate-300 z-10">
+                         <i data-lucide="loader-2" class="w-8 h-8 animate-spin"></i>
+                    </div>
+                    <a id="ad-click-link" href="#" target="_blank" class="w-full h-full block">
+                        <img id="ad-display-img" src="" alt="Advertisement" class="w-full h-full object-cover transition-opacity duration-700 opacity-0">
+                    </a>
+                    <span class="absolute top-2 right-2 bg-black/40 backdrop-blur-sm text-white text-[9px] px-2 py-0.5 rounded-full font-bold z-20 uppercase tracking-wider">Ad</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2 mb-4 px-2 fade-in-up">
+                <div class="w-1 h-5 bg-brand-accent rounded-full"></div>
+                <h3 class="text-lg font-bold text-brand-navy">What do you need?</h3>
+            </div>
+
+            <div class="space-y-4 mb-10">
+                
+                <div onclick="openResultPortal()" class="bg-white p-5 rounded-2xl shadow-soft border border-slate-50 flex items-center gap-4 active:scale-[0.98] transition-transform cursor-pointer fade-in-up">
+                    <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-500 shrink-0 shadow-sm">
+                        <i data-lucide="file-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brand-primary text-sm">Check Exam Result</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Matric & Inter Official Results</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 ml-auto"></i>
+                </div>
+
+                <div onclick="openAdmitCardPortal()" class="bg-white p-5 rounded-2xl shadow-soft border border-slate-50 flex items-center gap-4 active:scale-[0.98] transition-transform cursor-pointer fade-in-up delay-75">
+                    <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center text-purple-500 shrink-0 shadow-sm">
+                        <i data-lucide="download" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brand-primary text-sm">Download Admit Card</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Matric & Inter Official Admit Cards</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 ml-auto"></i>
+                </div>
+                <div onclick="openExamUpdatesPortal()" class="bg-white p-5 rounded-2xl shadow-soft border border-slate-50 flex items-center gap-4 active:scale-[0.98] transition-transform cursor-pointer fade-in-up delay-100">
+                    <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center text-red-500 shrink-0 shadow-sm">
+                        <i data-lucide="calendar" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brand-primary text-sm">Exam Updates</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Routine & Admit Card (Official)</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 ml-auto"></i>
+                </div>
+
+                <div onclick="askAI('Scholarship Eligibility, Dates, and How to Apply', 'Scholarship')" class="bg-white p-5 rounded-2xl shadow-soft border border-slate-50 flex items-center gap-4 active:scale-[0.98] transition-transform cursor-pointer fade-in-up delay-200">
+                    <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-500 shrink-0 shadow-sm">
+                        <i data-lucide="bot" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brand-primary text-sm">Scholarship Help</h4>
+                        <p class="text-xs text-slate-400 mt-0.5">Ask AI about Rules & Money</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-slate-300 ml-auto"></i>
+                </div>
+
+                <div onclick="askAI('Best Career Options, Streams, and Subject Guidance', 'Career')" class="bg-brand-navy text-white p-5 rounded-2xl shadow-soft flex items-center gap-4 active:scale-[0.98] transition-transform cursor-pointer fade-in-up delay-300">
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm">Career Guidance</h4>
+                        <p class="text-xs text-white/50 mt-0.5">What to do after exams?</p>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-5 h-5 text-white/30 ml-auto"></i>
+                </div>
+            </div>
+            
+        </section>
+
+    </main>
+
+    <div id="input-modal" class="fixed inset-0 z-50 bg-brand-bg hidden flex-col fade-in-up">
+        <div class="bg-brand-navy text-white px-5 py-6 flex items-center justify-between shadow-md relative z-30">
+            <h3 class="font-bold text-lg">Student Details</h3>
+            <button onclick="closeInputModal()" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white active:scale-90 transition-transform">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <div class="flex-grow p-6 flex flex-col items-center justify-center max-w-md mx-auto w-full overflow-y-auto">
+            
+            <div id="modal-video-ad-container" class="w-full max-w-md mb-6 hidden fade-in-up relative z-20">
+                <div class="aspect-video w-full rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-black relative">
+                     <div class="absolute inset-0 z-50 bg-transparent w-full h-full"></div>
+                     <iframe id="modal-yt-iframe" class="w-full h-full" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                <span class="absolute top-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full z-30 font-bold uppercase tracking-wide">Sponsored</span>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-card p-6 border border-slate-50 w-full relative z-20">
+                
+              
+              <div class="w-full flex flex-col items-center justify-center mb-6 border-b border-slate-100 pb-6">
+                        <div class=" p-0 rounded-full mb-5 shadow-inner">
+                <img src="https://i.ibb.co/V05r7BTq/In-Shot-20260103-231810361.png" alt="Bihar Board" class="h-28 w-auto object-contain drop-shadow-md">
+                    </div>
+                    <h4 class="text-brand-navy font-bold text-[15px] text-center uppercase tracking-wide leading-tight">Bihar School Examination Board</h4>
+                    <p class="text-xs text-slate-400 text-center mt-1">Official Student Portal</p>
+                </div>
+                
+                <input type="radio" name="board" value="BSEB" class="hidden" checked>
+
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-500 uppercase tracking-wide ml-1">Select Your Class</label>
+                    <select id="select-class" class="w-full bg-slate-50 border border-slate-100 text-brand-primary text-sm font-medium rounded-2xl py-4 px-4 outline-none focus:ring-2 focus:ring-brand-accent/20">
+                        <option value="" disabled selected>Select Class</option>
+                        <option value="10">Class 10 (Matric)</option>
+                        <option value="12">Class 12 (Inter)</option>
+                    </select>
+                </div>
+
+                <button onclick="submitDetails()" class="w-full bg-brand-navy text-white text-base font-semibold py-4 rounded-2xl shadow-lg active:scale-95 transition-all mt-6 flex items-center justify-center gap-2">
+                    <span>Confirm & Proceed</span>
+                    <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+  
+  <div class="fixed bottom-4 left-0 w-full flex justify-center z-40">
+  
+  <button onclick="openPolicy()" 
+    class="flex items-center gap-1 px-5 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-semibold rounded-full shadow-lg active:scale-95 transition-all duration-200">
+    
+    Privacy policy
+    
+  </button>
+
+</div>
+    <div id="ai-modal" class="fixed inset-0 z-50 bg-brand-bg hidden flex-col">
+        <div class="bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10">
+            <button onclick="closeAIModal()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-brand-navy active:scale-90 transition-transform">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 id="ai-title" class="font-bold text-brand-navy text-sm uppercase tracking-wide">AI Guide</h3>
+            <div class="w-10"></div>
+        </div>
+        <div class="flex-grow overflow-y-auto p-6 pb-20">
+            <div id="loader" class="hidden flex-col items-center justify-center mt-20 space-y-4">
+                <div class="w-12 h-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs text-slate-400 animate-pulse">Consulting AI...</p>
+            </div>
+            <div id="modal-content" class="prose w-full max-w-none fade-in-up"></div>
+        </div>
+    </div>
+
+    <div id="updates-modal" class="fixed inset-0 z-50 bg-brand-bg hidden flex-col">
+        <div id="updates-modal-header" class="bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10">
+            <button onclick="closeUpdatesModal()" class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-brand-navy active:scale-90 transition-transform">
+                <i data-lucide="arrow-left" class="w-5 h-5"></i>
+            </button>
+            <h3 id="update-modal-title" class="font-bold text-brand-navy text-sm uppercase tracking-wide">Updates</h3>
+            <div class="w-10"></div>
+        </div>
+        <div id="updates-modal-body" class="flex-grow overflow-y-auto pb-20 bg-slate-50">
+             <div id="updates-modal-content" class="fade-in-up p-4">
+                <p class="text-center text-xs text-slate-400 py-10">Loading...</p>
+             </div>
+        </div>
+    </div>
+  
+<div id="custom-alert" class="fixed inset-0 z-[999] bg-black/40 hidden items-center justify-center">
+  <div class="bg-[#FDFBF7] w-[85%] max-w-sm rounded-2xl shadow-xl p-5 animate-fadeIn text-center">
+
+    <img 
+      src="https://i.ibb.co/4RCFW3m8/In-Shot-20260105-231617960.png" alt="Alert Icon" 
+      class="h-100 w-30 mx-auto mb-5"
+    >
+
+    <p class="text-sm font-medium text-slate-700 mb-5">
+      Please select your class first.
+    </p>
+
+    <div class="flex justify-end">
+      <button onclick="closeCustomAlert()"
+        class="text-sm font-semibold text-brand-accent px-4 py-1 rounded-lg">
+        OK
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div id="update-alert" class="fixed inset-0 z-[999] bg-black/40 hidden items-center justify-center">
+  <div class="bg-[#FDFBF7] w-[85%] max-w-sm rounded-2xl shadow-xl p-5 animate-fadeIn text-center">
+ <img src="https://i.ibb.co/Qvt2qYkz/vecteezy-3d-male-character-talking-24785781.png" 
+      class="h-100 w-30 mx-auto mb-5"
+    >
+
+    <p id="update-alert-msg" class="text-sm font-medium text-slate-700 mb-5">
+      Update info goes here.
+    </p>
+
+    <div class="flex justify-end">
+      <button onclick="closeUpdateAlert()"
+        class="text-sm font-semibold text-brand-accent px-4 py-1 rounded-lg">
+        OK
+      </button>
+    </div>
+
+  </div>
+ 
+</div>
+  
+  <div id="policyModal" class="fixed bottom-0 left-0 w-full h-full bg-black/50 hidden z-50">
+
+  <div id="policyBox" class="absolute bottom-0 w-full max-h-[90%] bg-white rounded-t-2xl p-5 overflow-y-auto transform translate-y-full transition duration-300">
+
+    <div class="flex justify-between items-center mb-3">
+      <h2 class="font-bold">Privacy Policy</h2>
+      <button onclick="closePolicy()" class="text-red-500">✕</button>
+    </div>
+
+    <div class="text-sm space-y-3 leading-relaxed">
+
+      <p><strong>Last Updated: 2026</strong></p>
+
+      <p>Amrit.one में आपका स्वागत है। यह वेबसाइट खास तौर पर बिहार बोर्ड के छात्रों की मदद के लिए बनाई गई है।</p>
+
+      <h3 class="font-semibold">1. यह वेबसाइट क्या है</h3>
+      <p>यह एक student help website है जो बिहार बोर्ड (BSEB) के छात्रों के लिए बनाई गई है। यह official वेबसाइट नहीं है।</p>
+
+      <h3 class="font-semibold">2. हम कौन-सी जानकारी लेते हैं</h3>
+      <p>हम कोई personal जानकारी नहीं लेते। केवल basic browser और device जानकारी ली जा सकती है।</p>
+
+      <h3 class="font-semibold">3. जानकारी का उपयोग</h3>
+      <p>यह जानकारी वेबसाइट को बेहतर बनाने और speed सुधारने के लिए उपयोग होती है।</p>
+
+      <h3 class="font-semibold">4. Cookies</h3>
+      <p>हम cookies का उपयोग कर सकते हैं। आप चाहें तो इसे disable कर सकते हैं।</p>
+
+      <h3 class="font-semibold">5. Third-Party Services</h3>
+      <p>हम Google AdSense, Firebase और AI tools का उपयोग करते हैं।</p>
+
+      <h3 class="font-semibold">6. External Links</h3>
+      <p>दूसरी websites के links हो सकते हैं, जिनकी जिम्मेदारी हमारी नहीं है।</p>
+
+      <h3 class="font-semibold">7. Disclaimer</h3>
+      <p>यह वेबसाइट सिर्फ बिहार बोर्ड के छात्रों की मदद के लिए है और official नहीं है।</p>
+
+      <h3 class="font-semibold">8. आपकी सहमति</h3>
+      <p>इस वेबसाइट का उपयोग करने का मतलब है कि आप इस policy से सहमत हैं।</p>
+
+      <h3 class="font-semibold">9. संपर्क</h3>
+      <p>Email=amriticon62@gmail.com</p>
+      <p>support@amrit.one</p>
+
+    </div>
+
+  </div>
+</div>
+
+    <script type="module">
+        import { GoogleGenerativeAI } from "@google/generative-ai";
+        import { initializeApp } from "firebase/app";
+        import { getFirestore, collection, onSnapshot, query, where, getDocs, doc, getDoc } from "firebase/firestore";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBADp9soMrkd-Ld_OrdSSfU1Kqh3JYh8xc",
+            authDomain: "bihar-sin.firebaseapp.com",
+            projectId: "bihar-sin",
+            storageBucket: "bihar-sin.firebasestorage.app",
+            messagingSenderId: "735677527044",
+            appId: "1:735677527044:web:652614ef88a5cf470b7151"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const genAI = new GoogleGenerativeAI("AIzaSyDkHGoiAriAd-lcWNM72Fs2wUyT8XdbXzQ");
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        // --- FETCH DYNAMIC LINKS FROM FIREBASE ---
+        // CHANGED: Default values are now empty strings so we can detect if they haven't been updated
+        window.dynamicLinks = { 
+            matric: "", 
+            inter: "",
+            admitMatric: "", 
+            admitInter: "",
+            examMatric: "", 
+            examInter: ""
+        };
+
+        window.fetchResultLinks = async () => {
+            try {
+                const docRef = doc(db, "settings", "result_links");
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if(data.matric) window.dynamicLinks.matric = data.matric;
+                    if(data.inter) window.dynamicLinks.inter = data.inter;
+                    if(data.admitMatric) window.dynamicLinks.admitMatric = data.admitMatric;
+                    if(data.admitInter) window.dynamicLinks.admitInter = data.admitInter;
+                    if(data.examMatric) window.dynamicLinks.examMatric = data.examMatric;
+                    if(data.examInter) window.dynamicLinks.examInter = data.examInter;
+                }
+            } catch (error) {
+                console.log("Error loading result links:", error);
+            }
+        };
+
+        window.activeAdsList = [];
+        window.videoAdDetails = null;
+        let adInterval = null;
+        let currentAdIndex = 0;
+
+        function getYoutubeId(url) {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+        }
+
+        window.fetchAds = async () => {
+            const adContainer = document.getElementById('dynamic-ad-container');
+            const videoAdContainer = document.getElementById('modal-video-ad-container');
+            const videoFrame = document.getElementById('modal-yt-iframe');
+            const loader = document.getElementById('ad-loader');
+            
+            if (adInterval) clearInterval(adInterval);
+            window.activeAdsList = [];
+            window.videoAdDetails = null;
+            
+            try {
+                const q = query(
+                    collection(db, "artifacts", "bihar-sin-portal", "public", "data", "ads"),
+                    where("isActive", "==", true)
+                );
+
+                const snap = await getDocs(q);
+                
+                const today = new Date().toISOString().split('T')[0];
+                snap.forEach((doc) => {
+                    const data = doc.data();
+                    const start = data.startDate || "0000-00-00";
+                    const end = data.endDate || "9999-12-31";
+                    
+                    if (today >= start && today <= end) {
+                        if (data.videoUrl && getYoutubeId(data.videoUrl)) {
+                            window.videoAdDetails = data;
+                        } else {
+                            window.activeAdsList.push(data);
+                        }
+                    }
+                });
+
+                if (window.videoAdDetails) {
+                    const videoId = getYoutubeId(window.videoAdDetails.videoUrl);
+                    if(videoId) {
+                        videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&unmute=1&loop=1&playlist=${videoId}`;
+                        videoAdContainer.classList.remove('hidden');
+                    }
+                } else {
+                    videoAdContainer.classList.add('hidden');
+                }
+
+                if (window.activeAdsList.length > 0) {
+                    adContainer.classList.remove('hidden');
+                    loader.classList.add('hidden');
+                    startAdSlideshow();
+                } else {
+                    adContainer.classList.add('hidden');
+                }
+
+            } catch (err) {
+                console.log("Ad Fetch Error:", err);
+                adContainer.classList.add('hidden');
+                videoAdContainer.classList.add('hidden');
+            }
+        };
+
+        window.startAdSlideshow = () => {
+            currentAdIndex = 0;
+            renderAd(currentAdIndex);
+            if (window.activeAdsList.length > 1) {
+                adInterval = setInterval(() => {
+                    currentAdIndex = (currentAdIndex + 1) % window.activeAdsList.length;
+                    renderAd(currentAdIndex);
+                }, 4000); 
+            }
+        };
+
+        window.renderAd = (index) => {
+            const ad = window.activeAdsList[index];
+            const img = document.getElementById('ad-display-img');
+            const link = document.getElementById('ad-click-link');
+            img.style.opacity = '0';
+            setTimeout(() => {
+                img.src = ad.mediaUrl;
+                link.href = ad.targetUrl || "#";
+                img.onload = () => { img.style.opacity = '1'; };
+                setTimeout(() => img.style.opacity = '1', 100);
+            }, 350); 
+        };
+
+        window.cachedNotices = [];
+
+        window.fetchNotices = () => {
+            const cls = document.getElementById('select-class').value;
+            const brd = document.querySelector('input[name="board"]:checked').value;
+            const q = query(collection(db, "artifacts", "bihar-sin-portal", "public", "data", "updates"));
+
+            onSnapshot(q, (snapshot) => {
+                window.cachedNotices = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if(data.class == cls && data.board == brd) {
+                        window.cachedNotices.push(data);
+                    }
+                });
+            });
+        };
+
+        window.renderUpdatesInModal = (category) => {
+            const list = document.getElementById('updates-modal-content');
+            const body = document.getElementById('updates-modal-body');
+            const header = document.getElementById('updates-modal-header');
+            let html = "";
+            let found = 0;
+            const isExamUpdate = (category === 'Exam Updates');
+
+            if (isExamUpdate) {
+                body.className = "flex-grow overflow-y-auto pb-20 notebook-mode"; 
+                list.className = "fade-in-up"; 
+                header.className = "px-5 py-4 flex items-center justify-between sticky top-0 z-10 notebook-header";
+                document.getElementById('update-modal-title').style.color = "#1a237e";
+            } else {
+                body.className = "flex-grow overflow-y-auto pb-20 bg-slate-50"; 
+                list.className = "fade-in-up p-4"; 
+                header.className = "bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10";
+                document.getElementById('update-modal-title').style.color = "";
+            }
+
+            const getSortDate = (d) => {
+                if(d.sections && d.sections.length > 0) return d.sections[0].date;
+                if(d.sectionDate) return d.sectionDate;
+                return d.dateString ? d.dateString.split(',')[0] : '0000-00-00';
+            };
+
+            const sortedData = [...window.cachedNotices].sort((a, b) => getSortDate(b).localeCompare(getSortDate(a)));
+            if (isExamUpdate && found === 0) html += `<div class="notebook-spacer"></div>`;
+
+            sortedData.forEach((data) => {
+                found++;
+                if(isExamUpdate) {
+                    html += `<h4>${data.title} <span class="notebook-date-inline">${getSortDate(data)}</span></h4><div class="notebook-spacer"></div>`;
+                    if (data.sections && Array.isArray(data.sections)) {
+                        data.sections.forEach(sec => html += `<p><strong>${sec.title}:</strong> ${sec.date}</p>`);
+                    } else if (data.sectionTitle) {
+                        html += `<p><strong>${data.sectionTitle}:</strong> ${data.sectionDate}</p>`;
+                    }
+                    html += `<div class="notebook-spacer"></div><div>${marked.parse(data.content)}</div><div class="notebook-spacer"></div><div class="notebook-spacer"></div>`;
+                } else {
+                    let sectionsHtml = '';
+                    if (data.sections && Array.isArray(data.sections)) {
+                        sectionsHtml = '<div class="mt-4 bg-slate-50 rounded-xl overflow-hidden border border-slate-100">';
+                        data.sections.forEach(sec => {
+                            sectionsHtml += `<div class="flex justify-between items-center p-3 border-b border-slate-200 last:border-0 text-sm"><span class="font-semibold text-slate-700">${sec.title}</span><span class="font-bold text-brand-accent bg-white px-2 py-0.5 rounded border border-slate-100">${sec.date}</span></div>`;
+                        });
+                        sectionsHtml += '</div>';
+                    }
+                    html += `<div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-5 fade-in-up overflow-hidden"><div class="bg-slate-50 px-5 py-3 border-b border-slate-100 flex items-start justify-between gap-3"><h4 class="font-bold text-brand-navy text-[15px] leading-tight pt-1">${data.title}</h4></div><div class="p-5 pt-4"><div class="text-sm text-slate-700 font-medium leading-relaxed prose prose-sm max-w-none">${marked.parse(data.content)}</div>${sectionsHtml}</div></div>`;
+                }
+            });
+
+            if (found === 0) html = `<p class="text-center text-xs text-slate-400 py-10">No specific ${category} found.</p>`;
+            list.innerHTML = html;
+            lucide.createIcons();
+        };
+
+        window.askAI = async function(topic, type) {
+            const cls = document.getElementById('select-class').value;
+            const brd = document.querySelector('input[name="board"]:checked').value;
+            const modal = document.getElementById('ai-modal');
+            const loader = document.getElementById('loader');
+            const content = document.getElementById('modal-content');
+            const title = document.getElementById('ai-title');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            content.innerHTML = ''; 
+            title.innerText = type === 'Scholarship' ? "Scholarship Guide" : "Career Guide";
+            let prompt = type === 'Scholarship' ? `Student in Bihar, Class ${cls}, Board ${brd}. Explain govt scholarships. Rules, Eligibility and amount.` : `Student in Bihar, Class ${cls}, Board ${brd}. Career advice. 4 options in English. Professional.`;
+            try {
+                const result = await model.generateContent(prompt);
+                const response = await result.response;
+                loader.classList.add('hidden');
+                content.innerHTML = marked.parse(response.text());
+            } catch (error) {
+                loader.classList.add('hidden');
+                content.innerHTML = "Error connecting to AI.";
+            }
+        };
+        
+        // Initial Fetch
+        window.onload = function() {
+            lucide.createIcons();
+            if(window.fetchResultLinks) window.fetchResultLinks(); 
+            if(window.fetchAds) window.fetchAds();
+        };
+    </script>
+
+    <script>
+    function openInputModal() {
+        document.getElementById('input-modal').classList.remove('hidden');
+        document.getElementById('input-modal').classList.add('flex');
+    }
+
+    function closeInputModal() {
+        document.getElementById('input-modal').classList.add('hidden');
+        document.getElementById('input-modal').classList.remove('flex');
+    }
+
+    function openUpdatesModal(category) {
+        if(window.renderUpdatesInModal) {
+            window.renderUpdatesInModal(category);
+        }
+        document.getElementById('update-modal-title').innerText = category;
+        document.getElementById('updates-modal').classList.remove('hidden');
+        document.getElementById('updates-modal').classList.add('flex');
+    }
+
+    function closeUpdatesModal() {
+        document.getElementById('updates-modal').classList.add('hidden');
+        document.getElementById('updates-modal').classList.remove('flex');
+        
+        // Reset class to prevent layout issues in other modal usages
+        document.getElementById('updates-modal-content').className = 'fade-in-up p-4';
+        
+        // Reset iframe if it was a result portal view
+        document.getElementById('updates-modal-content').innerHTML = '<p class="text-center text-xs text-slate-400 py-10">Loading...</p>';
+    }
+
+    function closeAIModal() {
+        document.getElementById('ai-modal').classList.add('hidden');
+        document.getElementById('ai-modal').classList.remove('flex');
+    }
+
+    // Dynamic Link Load in Result Portal
+    function openResultPortal() {
+        const cls = document.getElementById('select-class').value;
+        let url = "";
+
+        if (cls === "10") {
+            url = window.dynamicLinks?.matric || ""; 
+        } else if (cls === "12") {
+            url = window.dynamicLinks?.inter || ""; 
+        }
+
+        // UPDATE CHECK ALERT
+        if (!url || url.trim() === "") {
+            showUpdateAlert("Result link is not updated yet. Please check back later!");
+            return;
+        }
+
+        // PDF RENDER FIX
+        let viewerUrl = url.toLowerCase().endsWith('.pdf') ? 'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true' : url;
+
+        const modal = document.getElementById('updates-modal');
+        const content = document.getElementById('updates-modal-content');
+        const title = document.getElementById('update-modal-title');
+        const body = document.getElementById('updates-modal-body');
+        const header = document.getElementById('updates-modal-header');
+
+        header.className = "bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10";
+        document.getElementById('update-modal-title').style.color = "";
+        
+        body.className = "flex-grow overflow-y-auto bg-slate-100 flex flex-col";
+        title.innerText = "BSEB OFFICIAL RESULT WINDOW";
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        content.innerHTML = `
+            <div class="p-4 flex flex-col h-full fade-in-up">
+                <div class="bg-blue-600 text-white p-3 rounded-t-xl text-[10px] font-bold flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    SECURE OFFICIAL SERVER CONNECTION
+                </div>
+                <div class="relative w-full flex-grow bg-white border-2 border-blue-600 rounded-b-xl overflow-hidden shadow-2xl" style="height: 500px;">
+                    <iframe src="${viewerUrl}" 
+                            class="w-full h-full border-none" 
+                            title="BSEB Result">
+                    </iframe>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-2 text-center italic">
+                    Note: Results are loaded directly from BSEB official servers.
+                </p>
+                <div class="mt-5 text-center flex justify-center pb-2">
+                    <a href="${url}" target="_blank" class="group relative inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold text-white transition-all duration-300 bg-brand-navy rounded-full shadow-[0_4px_15px_rgba(15,23,42,0.2)] hover:shadow-[0_8px_25px_rgba(14,165,233,0.4)] hover:-translate-y-1 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-brand-accent to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span class="relative flex items-center gap-2 z-10">
+                            Open in New Tab If Loading Fails <i data-lucide="external-link" class="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    // Admit Card Iframe function
+    function openAdmitCardPortal() {
+        const cls = document.getElementById('select-class').value;
+        let url = "";
+
+        if (cls === "10") {
+            url = window.dynamicLinks?.admitMatric || ""; 
+        } else if (cls === "12") {
+            url = window.dynamicLinks?.admitInter || ""; 
+        }
+
+        // UPDATE CHECK ALERT
+        if (!url || url.trim() === "") {
+            showUpdateAlert("Admit Card is not updated yet. Please check back later!");
+            return;
+        }
+
+        // PDF RENDER FIX
+        let viewerUrl = url.toLowerCase().endsWith('.pdf') ? 'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true' : url;
+
+        const modal = document.getElementById('updates-modal');
+        const content = document.getElementById('updates-modal-content');
+        const title = document.getElementById('update-modal-title');
+        const body = document.getElementById('updates-modal-body');
+        const header = document.getElementById('updates-modal-header');
+
+        header.className = "bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10";
+        document.getElementById('update-modal-title').style.color = "";
+        
+        body.className = "flex-grow overflow-y-auto bg-slate-100 flex flex-col";
+        title.innerText = "BSEB ADMIT CARD WINDOW";
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        content.innerHTML = `
+            <div class="p-4 flex flex-col h-full fade-in-up">
+                <div class="bg-purple-600 text-white p-3 rounded-t-xl text-[10px] font-bold flex items-center gap-2">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                    SECURE ADMIT CARD SERVER CONNECTION
+                </div>
+                <div class="relative w-full flex-grow bg-white border-2 border-purple-600 rounded-b-xl overflow-hidden shadow-2xl" style="height: 500px;">
+                    <iframe src="${viewerUrl}" 
+                            class="w-full h-full border-none" 
+                            title="BSEB Admit Card">
+                    </iframe>
+                </div>
+                <p class="text-[10px] text-slate-500 mt-2 text-center italic">
+                    Note: Admit Cards are loaded directly from BSEB official servers.
+                </p>
+                <div class="mt-5 text-center flex justify-center pb-2">
+                    <a href="${url}" target="_blank" class="group relative inline-flex items-center justify-center px-6 py-2.5 text-xs font-bold text-white transition-all duration-300 bg-brand-navy rounded-full shadow-[0_4px_15px_rgba(15,23,42,0.2)] hover:shadow-[0_8px_25px_rgba(14,165,233,0.4)] hover:-translate-y-1 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-brand-accent to-blue-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span class="relative flex items-center gap-2 z-10">
+                            Open in New Tab If Loading Fails <i data-lucide="external-link" class="w-3.5 h-3.5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    // Exam Updates Iframe function
+    function openExamUpdatesPortal() {
+        const cls = document.getElementById('select-class').value;
+        let url = "";
+
+        if (cls === "10") {
+            url = window.dynamicLinks?.examMatric || ""; 
+        } else if (cls === "12") {
+            url = window.dynamicLinks?.examInter || ""; 
+        }
+
+        // UPDATE CHECK ALERT
+        if (!url || url.trim() === "") {
+            showUpdateAlert("Exam Routine/Updates are not updated yet. Please check back later!");
+            return;
+        }
+
+        // PDF RENDER FIX (Using Google Docs viewer automatically if link ends in .pdf)
+        let viewerUrl = url.toLowerCase().endsWith('.pdf') ? 'https://docs.google.com/gview?url=' + encodeURIComponent(url) + '&embedded=true' : url;
+
+        const modal = document.getElementById('updates-modal');
+        const content = document.getElementById('updates-modal-content');
+        const title = document.getElementById('update-modal-title');
+        const body = document.getElementById('updates-modal-body');
+        const header = document.getElementById('updates-modal-header');
+
+        header.className = "bg-white px-5 py-4 border-b border-slate-100 flex items-center justify-between shadow-sm sticky top-0 z-10";
+        document.getElementById('update-modal-title').style.color = "";
+        
+        // Ensure no scroll on body for full-screen feel
+        body.className = "flex-grow overflow-hidden bg-white flex flex-col p-0";
+        content.className = "w-full h-full p-0 m-0"; 
+        
+        title.innerText = "BSEB EXAM UPDATES WINDOW";
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+
+        content.innerHTML = `
+            <div class="w-full h-[calc(100vh-61px)] flex flex-col fade-in-up relative bg-white">
+                <iframe src="${viewerUrl}" 
+                        class="w-full h-full border-none flex-grow" 
+                        title="BSEB Exam Updates">
+                </iframe>
+                
+                <div class="absolute bottom-8 left-0 right-0 flex justify-center pointer-events-none z-50">
+                    <a href="${url}" target="_blank" class="pointer-events-auto group relative inline-flex items-center justify-center px-6 py-3 text-xs font-bold text-white transition-all duration-300 bg-brand-navy rounded-full shadow-[0_8px_25px_rgba(0,0,0,0.3)] hover:shadow-[0_8px_30px_rgba(220,38,38,0.5)] hover:-translate-y-1 overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-red-500 to-red-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <span class="relative flex items-center gap-2 z-10">
+                            Open in New Tab <i data-lucide="external-link" class="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform"></i>
+                        </span>
+                    </a>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+
+    function showCustomAlert() {
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.classList.remove('hidden');
+        alertBox.classList.add('flex');
+    }
+
+    function closeCustomAlert() {
+        const alertBox = document.getElementById('custom-alert');
+        alertBox.classList.add('hidden');
+        alertBox.classList.remove('flex');
+    }
+
+    // NEW ALERT FUNCTIONS FOR UPDATES
+    function showUpdateAlert(message) {
+        document.getElementById('update-alert-msg').innerText = message;
+        const alertBox = document.getElementById('update-alert');
+        alertBox.classList.remove('hidden');
+        alertBox.classList.add('flex');
+    }
+
+    function closeUpdateAlert() {
+        const alertBox = document.getElementById('update-alert');
+        alertBox.classList.add('hidden');
+        alertBox.classList.remove('flex');
+    }
+
+    function submitDetails() {
+        if (!document.getElementById('select-class').value) {
+            showCustomAlert(); 
+            return;
+        }
+
+        closeInputModal();
+        document.getElementById('hero-section').style.display = 'none';
+        document.getElementById('chakra-bg').style.display = 'none';
+        document.getElementById('results-section').classList.remove('hidden');
+        if (window.fetchNotices) window.fetchNotices();
+    }
+    
+    function resetToHome() {
+        document.getElementById('results-section').classList.add('hidden');
+        document.getElementById('hero-section').style.display = 'flex';
+        document.getElementById('chakra-bg').style.display = 'block';
+    }
+  
+
+
+// OPEN
+function openPolicy() {
+  document.getElementById("policyModal").classList.remove("hidden");
+  setTimeout(() => {
+    document.getElementById("policyBox").classList.remove("translate-y-full");
+  }, 10);
+}
+
+// CLOSE
+function closePolicy() {
+  document.getElementById("policyBox").classList.add("translate-y-full");
+  setTimeout(() => {
+    document.getElementById("policyModal").classList.add("hidden");
+  }, 300);
+}
+
+// ✅ AUTO OPEN EVERY TIME (with slight delay)
+window.addEventListener("load", function () {
+  setTimeout(() => {
+    openPolicy();
+  }, 800); // 0.8 sec baad open hoga (smooth feel)
+});
+
+
+
+
+</script>
+</body>
+</html>
+
